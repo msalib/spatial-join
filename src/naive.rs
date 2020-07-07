@@ -1,6 +1,64 @@
-use geo::Geometry;
+use geo::{Geometry, Point};
 
 use crate::{relates::Relates, Interaction, ProxMapRow, SJoinRow, SplitGeoSeq};
+
+impl SplitGeoSeq {
+    pub fn to_vec(&self) -> Vec<Geometry<f64>> {
+        let mut result = vec![
+            Geometry::Point(Point::new(0., 0.));
+            self.geos.points.len()
+                + self.geos.lines.len()
+                + self.geos.polys.len()
+                + self.geos.line_strings.len()
+                + self.geos.rects.len()
+                + self.geos.tris.len()
+        ];
+        for (i, g) in self
+            .indexes
+            .points
+            .iter()
+            .zip(self.geos.points.iter().cloned())
+        {
+            result[i] = g.into();
+        }
+        for (i, g) in self
+            .indexes
+            .lines
+            .iter()
+            .zip(self.geos.lines.iter().cloned())
+        {
+            result[i] = g.into();
+        }
+        for (i, g) in self
+            .indexes
+            .polys
+            .iter()
+            .zip(self.geos.polys.iter().cloned())
+        {
+            result[i] = g.into();
+        }
+        for (i, g) in self
+            .indexes
+            .line_strings
+            .iter()
+            .zip(self.geos.line_strings.iter().cloned())
+        {
+            result[i] = g.into();
+        }
+        for (i, g) in self
+            .indexes
+            .rects
+            .iter()
+            .zip(self.geos.rects.iter().cloned())
+        {
+            result[i] = g.into();
+        }
+        for (i, g) in self.indexes.tris.iter().zip(self.geos.tris.iter().cloned()) {
+            result[i] = g.into();
+        }
+        result
+    }
+}
 
 // FIXME: comment explaining that this comes from gen2.py
 #[macro_export]

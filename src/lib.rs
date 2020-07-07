@@ -205,15 +205,20 @@
 //!
 //! ## License
 //!
-//! This package is licensed under the [Apache License, Version
-//! 2.0](http://www.apache.org/licenses/LICENSE-2.0).
+//! Licensed under either of
+//!
+//!  * Apache License, Version 2.0
+//!    ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+//!  * MIT license
+//!    ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+//!
+//! at your option.
 //!
 //! ## Contribution
 //!
-//! Unless you explicitly state otherwise, any contribution
-//! intentionally submitted for inclusion in the work by you, as
-//! defined in the Apache-2.0 license, shall be licensed as above,
-//! without any additional terms or conditions.
+//! Unless you explicitly state otherwise, any contribution intentionally submitted
+//! for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
+//! dual licensed as above, without any additional terms or conditions.
 //!
 
 use rstar::RTree;
@@ -229,22 +234,6 @@ mod relates;
 
 mod rtrees;
 use rtrees::FakeRegion;
-
-// todo:
-// simplify (we need a better name): convert polygons to rects and triangles (and maybe LineStrings if you add the extra point) and convert linestrings to lines when possible
-// a new proptest: make a random (but at least 1x1) grid of boxes where boxes range in size from 1.5 to 0.5. really, make a grid of sizes. from this grid, we should be able to make an actual seq of rects (or polys!) and an sjoin result set
-// test idea for geo crate: linestring/polys that store their data in linearly in simd friendly fashion (xs: array, ys: array, exterior_len:usize, smallvec of hole offsets)...criterion test for whether that makes MapCoords faster for projection
-// avoid 2x alloc for every non copyable big_geo; first, move vec::new to join_outer; then use a thread_local
-// python interface (feature)
-//   either slow with wkb interface or implement in geos->geo conversion in the libgeos crate
-
-// geographic:
-// keep SpatialIndex as the external facade, but move all the code into a PlanarSpatialIndex and add a GeographicSpatialIndex
-// use geo's HaversineDistance for proptest comparison
-// GeoSI has a hashmap from ZoneID to PlanarSpatialIndex
-// for each geo in big, generate a tinyset and intersect that with the set of ZoneIDs available in small.
-// geos with empty intersections get dropped on the floor. geos with only one intersection are easy: they translate into a call against a single PSI. make a vec of pairs of PSP and matching Big children and then flat_map a call that invokes the right submethod on them. flatten the result. and then chain the next part.
-// we still need to handle the case of Big geo sets that cover multiple Small PSPs: for each big geo, we concat the results of running it against all Small PSPs but then buffer into a smallvec, sort and dedup; it would be faster if we could do this per small geo type, but meh that's an optimization that's probably not worth it.
 
 #[derive(Debug)]
 pub struct SpatialIndex {

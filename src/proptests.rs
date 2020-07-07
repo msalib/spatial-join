@@ -84,8 +84,8 @@ fn geo_strat() -> impl Strategy<Value = Geometry<f64>> {
 
 #[rustfmt::skip]
 prop_compose! {
-    fn arb_splitgeoseq()(
-	geos in prop::collection::vec(geo_strat(), 0..100)) -> SplitGeoSeq {
+    fn arb_splitgeoseq(n: usize)(
+	geos in prop::collection::vec(geo_strat(), 0..n)) -> SplitGeoSeq {
 	(&geos).try_into().unwrap()
     }
 }
@@ -94,8 +94,8 @@ prop_compose! {
 proptest! {
     #[test]
     fn prox_map_vs_slow(
-	  small in arb_splitgeoseq(),
-	  big in arb_splitgeoseq(),
+	  small in arb_splitgeoseq(20),
+	  big in arb_splitgeoseq(20),
 	  max_distance in 0.0..4.0) {
 	use crate::tests::test_prox_map;
 	let expected = slow_prox_map(&small, &big, max_distance);
@@ -117,8 +117,8 @@ fn interaction_strat() -> impl Strategy<Value = Interaction> {
 proptest! {
     #[test]
     fn spatial_join_vs_slow(
-	  small in arb_splitgeoseq(),
-	  big in arb_splitgeoseq(),
+	  small in arb_splitgeoseq(100),
+	  big in arb_splitgeoseq(100),
 	  interaction in interaction_strat()) {
 	use crate::tests::test_spatial_join;
 	let expected = slow_spatial_join(&small, &big, interaction);

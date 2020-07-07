@@ -827,8 +827,6 @@ impl ParSpatialIndex {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn chain_macro() {
         let x: Vec<i32> = chain!(3..7, 9..12, 2..4).collect();

@@ -89,65 +89,7 @@ pub(crate) struct SplitGeo {
     pub tris: Vec<Triangle<f64>>,
 }
 
-// just to make testing easier
 impl SplitGeoSeq {
-    // FIXME: move to_vec into naive::
-    pub fn to_vec(&self) -> Vec<Geometry<f64>> {
-        let mut result = vec![
-            Geometry::Point(Point::new(0., 0.));
-            self.geos.points.len()
-                + self.geos.lines.len()
-                + self.geos.polys.len()
-                + self.geos.line_strings.len()
-                + self.geos.rects.len()
-                + self.geos.tris.len()
-        ];
-        for (i, g) in self
-            .indexes
-            .points
-            .iter()
-            .zip(self.geos.points.iter().cloned())
-        {
-            result[i] = g.into();
-        }
-        for (i, g) in self
-            .indexes
-            .lines
-            .iter()
-            .zip(self.geos.lines.iter().cloned())
-        {
-            result[i] = g.into();
-        }
-        for (i, g) in self
-            .indexes
-            .polys
-            .iter()
-            .zip(self.geos.polys.iter().cloned())
-        {
-            result[i] = g.into();
-        }
-        for (i, g) in self
-            .indexes
-            .line_strings
-            .iter()
-            .zip(self.geos.line_strings.iter().cloned())
-        {
-            result[i] = g.into();
-        }
-        for (i, g) in self
-            .indexes
-            .rects
-            .iter()
-            .zip(self.geos.rects.iter().cloned())
-        {
-            result[i] = g.into();
-        }
-        for (i, g) in self.indexes.tris.iter().zip(self.geos.tris.iter().cloned()) {
-            result[i] = g.into();
-        }
-        result
-    }
-
     pub fn merge(mut a: SplitGeoSeq, mut b: SplitGeoSeq) -> SplitGeoSeq {
         a.geos.points.append(&mut b.geos.points);
         a.geos.lines.append(&mut b.geos.lines);
@@ -218,17 +160,20 @@ impl Indexes {
         }
     }
 
-    pub fn into_iter(self) -> impl Iterator<Item = usize> {
-        self.range().chain(match self {
-            Indexes::Range(_) => vec![].into_iter(),
-            Indexes::Explicit(v) => v.into_iter(),
-        })
-    }
-
+    // The one user for this method is test code but it would be a
+    // pain to extract it to live with the rest of the test code.
+    #[allow(dead_code)]
     pub fn iter(&self) -> impl Iterator<Item = usize> + '_ {
         self.range().chain(match self {
             Indexes::Range(_) => EMPTY_VEC.iter().copied(),
             Indexes::Explicit(v) => v.iter().copied(),
+        })
+    }
+
+    pub fn into_iter(self) -> impl Iterator<Item = usize> {
+        self.range().chain(match self {
+            Indexes::Range(_) => vec![].into_iter(),
+            Indexes::Explicit(v) => v.into_iter(),
         })
     }
 

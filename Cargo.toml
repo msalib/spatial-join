@@ -1,10 +1,10 @@
 [package]
 name = "spatial-join"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Michael Salib <msalib@alum.mit.edu>"]
-repository = "https://github/msalib/spatial-join"
+repository = "https://github.com/msalib/spatial-join"
 edition = "2018"
-license = "Apache-2.0"
+license = "MIT/Apache-2.0"
 documentation = "https://docs.rs/spatial-join/"
 readme = "README.md"
 keywords = ["gis", "geo", "geography", "geospatial", "spatial-join"]
@@ -29,13 +29,9 @@ proptest = "0.10.0"
 pretty_assertions = "0.6.1"
 criterion = "0.3"
 approx = "0.3.2"
-# This is a specially patched wkt to support the latest version of
-# geo-types, which we rely on for tests and benchmarks.
-wkt = {path = "/home/msalib/os/wkt"}
-
-[dev-dependencies.geos]
-version = "5.0.0"
-features = ["geo"]
+wkt = "0.8.0"
+geos = "5.0.0"
+rand = "0.7.3"
 
 
 [[bench]]
