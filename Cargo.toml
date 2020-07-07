@@ -6,7 +6,7 @@ repository = "https://github/msalib/spatial-join"
 edition = "2018"
 license = "Apache-2.0"
 documentation = "https://docs.rs/spatial-join/"
-readme = "../README.md"
+readme = "README.md"
 keywords = ["gis", "geo", "geography", "geospatial", "spatial-join"]
 description = "Spatial join tools"
 
