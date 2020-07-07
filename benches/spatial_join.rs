@@ -18,7 +18,7 @@ fn load(path: &str) -> Vec<geo::Geometry<f64>> {
 
 fn criterion_benchmark(c: &mut Criterion) {
     let polys1k = load("polys1k.wkt");
-    let polys10k = load("polys10k.wkt");
+    // let polys10k = load("polys10k.wkt");
     c.bench_function("1k load", |b| {
         b.iter(|| {
             spatial_join::Config::new().serial(&polys1k).unwrap();
@@ -36,29 +36,29 @@ fn criterion_benchmark(c: &mut Criterion) {
         })
     });
 
-    c.bench_function("10k self spatial join", |b| {
-        b.iter(|| {
-            let si = spatial_join::Config::new().serial(&polys10k).unwrap();
-            let v: Vec<_> = si
-                .spatial_join(&polys10k, spatial_join::Interaction::Intersects)
-                .unwrap()
-                .collect();
-            v
-        })
-    });
+    // c.bench_function("10k self spatial join", |b| {
+    //     b.iter(|| {
+    //         let si = spatial_join::Config::new().serial(&polys10k).unwrap();
+    //         let v: Vec<_> = si
+    //             .spatial_join(&polys10k, spatial_join::Interaction::Intersects)
+    //             .unwrap()
+    //             .collect();
+    //         v
+    //     })
+    // });
 
-    c.bench_function("10k self par spatial join", |b| {
-        b.iter(|| {
-            use rayon::iter::ParallelIterator;
+    // c.bench_function("10k self par spatial join", |b| {
+    //     b.iter(|| {
+    //         use rayon::iter::ParallelIterator;
 
-            let si = spatial_join::Config::new().parallel(&polys10k).unwrap();
-            let v: Vec<_> = si
-                .spatial_join(&polys10k, spatial_join::Interaction::Intersects)
-                .unwrap()
-                .collect();
-            v
-        })
-    });
+    //         let si = spatial_join::Config::new().parallel(&polys10k).unwrap();
+    //         let v: Vec<_> = si
+    //             .spatial_join(&polys10k, spatial_join::Interaction::Intersects)
+    //             .unwrap()
+    //             .collect();
+    //         v
+    //     })
+    // });
 }
 
 criterion_group!(benches, criterion_benchmark);
