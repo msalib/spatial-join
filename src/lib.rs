@@ -1,0 +1,459 @@
+//! `spatial-join` provides tools to perform streaming geospatial-joins on geographic data.
+//!
+//! ## Spatial Joins
+//!
+//! Given two sequences of geospatial shapes, `small` and `big`, a
+//! spatial-join indicates which elements of `small` and `big`
+//! intersect. You could compute this yourself using a nested loop,
+//! but like any good spatial-join package, this one uses
+//! [R-trees](https://en.wikipedia.org/wiki/R-tree) to dramatically
+//! reduce the search space.
+//!
+//! We're not limited to intersections only! We can also find pairs
+//! where elements of `small` contain elements of `big` or are within
+//! elements of `big` by passing different values of
+//! [Interaction](./enum.Interaction.html).
+
+//! ## Proximity Maps
+//!
+//! While spatial join is a well known term, proximity map is
+//! not. Given two sequences of shapes `small` and `big`, it just
+//! finds all pairs of items whose distance is less than some
+//! threshold. You set that threshold using the
+//! [`max_distance`](./struct.Config.html#method.max_distance) method
+//! on the [`Config`](./struct.Config.html) struct.
+//!
+//! ## Inputs
+//!
+//! Inputs are sequences of shapes, and shapes must be one of the
+//! following elements from the
+//! [`geo`](https://docs.rs/geo/latest/geo/) crate:
+//! * [points](https://docs.rs/geo/latest/geo/struct.Point.html),
+//! * [lines](https://docs.rs/geo/latest/geo/struct.Line.html),
+//! * [line strings](https://docs.rs/geo/latest/geo/struct.LineString.html),
+//! * [polygons](https://docs.rs/geo/latest/geo/struct.Polygon.html),
+//! * [rectangles](https://docs.rs/geo/latest/geo/struct.Rect.html),
+//! * [triangles](https://docs.rs/geo/latest/geo/struct.Triangle.html), or
+//! * the [Geometry](https://docs.rs/geo/latest/geo/enum.Geometry.html) enum
+//!
+//! `MultiPoint`, `MultiLineString`, and `MultiPolygon` are *not* supported.
+//!
+//! While the [geo] crate makes these types generic over the
+//! coordinate type, `spatial-join` only supports [geo] types
+//! parametrized with [std::f64] coordinate types (i.e.,
+//! `Polygon<f64>`).
+//!
+//! So what kind of sequences can you use?
+//! * slices: `&[T]`,
+//! * vectors: `Vec<T>` or `&Vec<T>`, or
+//! * [`&geo::GeometryCollection`](https://docs.rs/geo/latest/geo/struct.GeometryCollection.html)
+//!
+//! In addition:
+//! * all coordinate values must be finite
+//! * `LineStrings` must have at least two points
+//! * `Polygon` exteriors must have at least three points
+//!
+//! Input that doesn't meet these conditions will return an [error](./enum.Error.html).
+//!
+//! ## Outputs
+//!
+//! [`SpatialIndex::spatial_join`](./struct.SpatialIndex.html#method.spatial_join) returns `Result<impl
+//! Iterator<Item=SJoinRow>, Error>` where
+//! [`SJoinRow`](./struct.SJoinRow.html) gives you indexes into
+//! `small` and `big` to find the corresponding geometries.
+//!
+//! Alternatively, you can use [`SpatialIndex::spatial_join_with_geos`](./struct.SpatialIndex.html#method.spatial_join_with_geos)
+//! which returns `Result<impl Iterator<Item=SJoinGeoRow>, Error>`.
+//! [`SJoinGeoRow`](./struct.SJoinGeoRow.html) differs from
+//! [`SJoinRow`](./struct.SJoinRow.html) only in the addition of `big`
+//! and `small`
+//! [`Geometry`](https://docs.rs/geo/latest/geo/enum.Geometry.html)
+//! fields so you can work directly with the source geometries without
+//! having to keep the original sequences around. This convenience
+//! comes at the cost of cloning the source geometries which can be
+//! expensive for geometries that use heap storage like `LineString`
+//! and `Polygon`.
+//!
+//! In a similar manner, [`SpatialIndex::proximity_map`](./struct.SpatialIndex.html#method.proximity_map) and
+//! [`SpatialIndex::proximity_map_with_geos`](./struct.SpatialIndex.html#method.proximity_map) offer
+//! [`ProxMapRow`](./struct.ProxMapRow.html) and
+//! [`ProxMapGeoRow`](./struct.ProxMapGeoRow.html) iterators in their
+//! return types. These differ from their `SJoin` counterparts only in
+//! the addition of a `distance` field.
+//!
+//! ## Examples
+//!
+//! Here's the simplest thing: let's verify that a point intersects itself.
+//! ```
+//! use spatial_join::*;
+//! use geo::{Geometry, Point};
+//! // Create a new spatial index loaded with just one point
+//! let idx = Config::new()
+//!     // Ask for a serial index that will process data on only one core
+//!     .serial(vec![Geometry::Point(Point::new(1.1, 2.2))])
+//!     .unwrap(); // Creating an index can fail!
+//! let results: Vec<_> = idx
+//!     .spatial_join(
+//!         vec![Geometry::Point(Point::new(1.1, 2.2))],
+//!         Interaction::Intersects,
+//!     )
+//!     .unwrap() // spatial_join can fail, but we'll assume it won't here
+//!     .collect(); // we actually get an iterator, but let's collect it into a Vector.
+//! assert_eq!(
+//!     results,
+//!     vec![SJoinRow {
+//!         big_index: 0,
+//!         small_index: 0
+//!     }]
+//! );
+//! ```
+//!
+//! For a slightly more complicated, we'll take a box and a smaller
+//! box and verify that the big box contains the smaller box, and
+//! we'll do it all in parallel.
+//! ```
+//! use spatial_join::*;
+//! use geo::{Coordinate, Geometry, Point, Rect};
+//!    use rayon::prelude::*;
+//!
+//! let idx = Config::new()
+//!     .parallel(vec![Geometry::Rect(Rect::new(
+//!         Coordinate { x: -1., y: -1. },
+//!         Coordinate { x: 1., y: 1. },
+//!     ))])
+//!     .unwrap();
+//! let results: Vec<_> = idx
+//!     .spatial_join(
+//!         vec![Geometry::Rect(Rect::new(
+//!             Coordinate { x: -0.5, y: -0.5 },
+//!             Coordinate { x: 0.5, y: 0.5 },
+//!     ))],
+//!         Interaction::Contains,
+//!     )
+//!     .unwrap()
+//!     .collect();
+//! assert_eq!(
+//!     results,
+//!     vec![SJoinRow {
+//!         big_index: 0,
+//!         small_index: 0
+//!     }]
+//! );
+//! ```
+//!
+//! ## Crate Features
+//!
+//! - `parallel`
+//!   - Enabled by default.
+//!   - This adds a dependency on
+//!     [`rayon`](https://crates.io/crates/rayon) and provides a
+//!     [`parallel`](./struct.Config.html#method.parallel) method that
+//!     returns a [`ParSpatialIndex`](./struct.ParSpatialIndex.html)
+//!     just like the [`SpatialIndex`](./struct.SpatialIndex.html)
+//!     that [`serial`](./struct.Config.html#method.serial) returns
+//!     except that all the methods return `Result<impl
+//!     ParallelIterator>` instead of `Result<impl Iterator>`.
+//!
+//! ## Geographic
+//!
+//! Right now, this entire crate assumes that you're dealing with
+//! euclidean geometry on a two-dimensional plane. But that's unusual:
+//! typically you've got geographic coordinates (longitude and
+//! latitude measured in decimal degrees). To use the tools in this
+//! package correctly, you should really reproject your geometries
+//! into an appropriate euclidean coordinate system. That might be
+//! require you to do a lot of extra work if the extent of your
+//! geometry sets exceeds what any reasonable projection can handle.
+//!
+//! Alternatively, you can just pretend that geodetic coordinates are
+//! euclidean. For spatial-joins that will mostly work if all of your
+//! geometries steer well-clear of the anti-meridian (longitude=±180
+//! degrees) and the polar regions as well.
+//!
+//! For proximity maps, you'll need to pick an appropriate
+//! `max_distance` value measured in decimal degrees which will be
+//! used for both longitude and latitude offsets
+//! simulataneously. That's challenging because while one degree of
+//! latitude is always the same (about 110 km), one degree of
+//! longitude changes from about 110 km at the equator to 0 km at the
+//! poles. If your geometry sets have a narrow extant and are near the
+//! equator, you might be able to find a `max_distance` value that
+//! works, but that's pretty unlikely.
+//!
+//! ## Performance
+//!
+//! * You'll notice that our API specifies geometry sequences in terms
+//!   of `small` and `big`. In order to construct a spatial index
+//!   object, we have to build a series of R-trees, one per geometry
+//!   type, using bulk loading. This process is expensive
+//!   (`O(n*log(n))`) so you'll probably get better overall performance
+//!   if you index the smaller sequence.
+//! * Because the spatial-join and proximity-map operations are
+//!   implemented as iterators, you can process very large data-sets
+//!   with low memory usage. But you do need to keep both the `small`
+//!   and `large` geometry sequence in memory, in addition to rtrees
+//!   for the `small` sequence. Note that in some cases, specifically
+//!   whenever we're processing a heap-bound element of the `large`
+//!   sequence (i.e., Polygons or LineStrings), we will buffer all
+//!   matching result records for each such `large` geometry.
+//! * If you use a non-zero `max_distance` value, then any
+//!   spatial-join operations will be somewhat slower since
+//!   `max_distance` effectively buffers `small` geometries in the
+//!   r-trees. You'll still get the correct answer, but it might take
+//!   longer. The larger the `max_distance` value, the longer it will
+//!   take.
+//!
+//! ## License
+//!
+//! This package is licensed under the [Apache License, Version
+//! 2.0](http://www.apache.org/licenses/LICENSE-2.0).
+//!
+//! ## Contribution
+//!
+//! Unless you explicitly state otherwise, any contribution
+//! intentionally submitted for inclusion in the work by you, as
+//! defined in the Apache-2.0 license, shall be licensed as above,
+//! without any additional terms or conditions.
+//!
+
+use rstar::RTree;
+
+mod structs;
+pub use structs::*;
+
+mod validation;
+
+mod conv;
+
+mod relates;
+
+mod rtrees;
+use rtrees::FakeRegion;
+
+// todo:
+// simplify (we need a better name): convert polygons to rects and triangles (and maybe LineStrings if you add the extra point) and convert linestrings to lines when possible
+// a new proptest: make a random (but at least 1x1) grid of boxes where boxes range in size from 1.5 to 0.5. really, make a grid of sizes. from this grid, we should be able to make an actual seq of rects (or polys!) and an sjoin result set
+// test idea for geo crate: linestring/polys that store their data in linearly in simd friendly fashion (xs: array, ys: array, exterior_len:usize, smallvec of hole offsets)...criterion test for whether that makes MapCoords faster for projection
+// avoid 2x alloc for every non copyable big_geo; first, move vec::new to join_outer; then use a thread_local
+// python interface (feature)
+//   either slow with wkb interface or implement in geos->geo conversion in the libgeos crate
+
+// geographic:
+// keep SpatialIndex as the external facade, but move all the code into a PlanarSpatialIndex and add a GeographicSpatialIndex
+// use geo's HaversineDistance for proptest comparison
+// GeoSI has a hashmap from ZoneID to PlanarSpatialIndex
+// for each geo in big, generate a tinyset and intersect that with the set of ZoneIDs available in small.
+// geos with empty intersections get dropped on the floor. geos with only one intersection are easy: they translate into a call against a single PSI. make a vec of pairs of PSP and matching Big children and then flat_map a call that invokes the right submethod on them. flatten the result. and then chain the next part.
+// we still need to handle the case of Big geo sets that cover multiple Small PSPs: for each big geo, we concat the results of running it against all Small PSPs but then buffer into a smallvec, sort and dedup; it would be faster if we could do this per small geo type, but meh that's an optimization that's probably not worth it.
+
+#[derive(Debug)]
+pub struct SpatialIndex {
+    small: SplitGeoSeq,
+    point_tree: RTree<FakeRegion>,
+    line_tree: RTree<FakeRegion>,
+    poly_tree: RTree<FakeRegion>,
+    ls_tree: RTree<FakeRegion>,
+    rect_tree: RTree<FakeRegion>,
+    tri_tree: RTree<FakeRegion>,
+    config: Config,
+}
+
+#[cfg(feature = "parallel")]
+pub struct ParSpatialIndex(SpatialIndex);
+
+mod index;
+
+#[cfg(test)]
+mod naive;
+
+#[cfg(test)]
+mod proptests;
+
+#[cfg(test)]
+mod tests {
+    use std::convert::TryInto;
+
+    use geo::Point;
+    use pretty_assertions::assert_eq;
+
+    #[cfg(feature = "parallel")]
+    use rayon::prelude::*;
+
+    use super::*;
+    use index::*;
+
+    pub fn test_prox_map<Small, Big, E1, E2, E3, E4>(
+        config: Config,
+        small: Small,
+        big: Big,
+        mut expected: Vec<ProxMapRow>,
+    ) where
+        Small: TryInto<SplitGeoSeq, Error = E1> + Clone + TryInto<Par<SplitGeoSeq>, Error = E2>,
+        Big: TryInto<SplitGeoSeq, Error = E3> + Clone + TryInto<Par<SplitGeoSeq>, Error = E4>,
+        E1: std::any::Any + std::fmt::Debug,
+        E2: std::any::Any + std::fmt::Debug,
+        E3: std::any::Any + std::fmt::Debug,
+        E4: std::any::Any + std::fmt::Debug,
+    {
+        let small_geoms = sgs_try_into(small.clone())
+            .expect("small conversion")
+            .to_vec();
+        let big_geoms = sgs_try_into(big.clone()).expect("big conversion").to_vec();
+        let mut expected_geoms: Vec<_> = expected
+            .iter()
+            .map(|pmr| ProxMapGeoRow {
+                big_index: pmr.big_index,
+                small_index: pmr.small_index,
+                distance: pmr.distance,
+                big: big_geoms[pmr.big_index].clone(),
+                small: small_geoms[pmr.small_index].clone(),
+            })
+            .collect();
+        expected.sort();
+        expected_geoms.sort();
+        let _expected_geoms2 = expected_geoms.clone();
+
+        let si = config
+            .clone()
+            .serial(small.clone())
+            .expect("construction succeeded");
+        let mut actual = si.proximity_map(big.clone()).unwrap().collect::<Vec<_>>();
+        actual.sort();
+        assert_eq!(actual, expected);
+
+        let mut actual_geoms = si
+            .proximity_map_with_geos(big.clone())
+            .unwrap()
+            .collect::<Vec<_>>();
+        actual_geoms.sort();
+        assert_eq!(actual_geoms, expected_geoms);
+
+        #[cfg(feature = "parallel")]
+        {
+            let si = config
+                .clone()
+                .parallel(small)
+                .expect("construction succeeded");
+            let mut actual = si.proximity_map(big.clone()).unwrap().collect::<Vec<_>>();
+            actual.sort();
+            assert_eq!(actual, expected);
+
+            let mut actual_geoms = si
+                .proximity_map_with_geos(big.clone())
+                .unwrap()
+                .collect::<Vec<_>>();
+            actual_geoms.sort();
+            assert_eq!(actual_geoms, _expected_geoms2);
+        }
+    }
+
+    pub fn test_spatial_join<Small, Big, E1, E2, E3, E4>(
+        config: Config,
+        small: Small,
+        big: Big,
+        interaction: Interaction,
+        mut expected: Vec<SJoinRow>,
+    ) where
+        Small: TryInto<SplitGeoSeq, Error = E1> + Clone + TryInto<Par<SplitGeoSeq>, Error = E2>,
+        Big: TryInto<SplitGeoSeq, Error = E3> + Clone + TryInto<Par<SplitGeoSeq>, Error = E4>,
+        E1: std::any::Any + std::fmt::Debug,
+        E2: std::any::Any + std::fmt::Debug,
+        E3: std::any::Any + std::fmt::Debug,
+        E4: std::any::Any + std::fmt::Debug,
+    {
+        let small_geoms = sgs_try_into(small.clone())
+            .expect("small conversion")
+            .to_vec();
+        let big_geoms = sgs_try_into(big.clone()).expect("big conversion").to_vec();
+        let mut expected_geoms: Vec<_> = expected
+            .iter()
+            .map(|sjr| SJoinGeoRow {
+                big_index: sjr.big_index,
+                small_index: sjr.small_index,
+                big: big_geoms[sjr.big_index].clone(),
+                small: small_geoms[sjr.small_index].clone(),
+            })
+            .collect();
+        expected.sort();
+        expected_geoms.sort();
+        let _expected_geoms2 = expected_geoms.clone();
+
+        let si = config
+            .clone()
+            .serial(small.clone())
+            .expect("construction succeeded");
+        let mut actual = si
+            .spatial_join(big.clone(), interaction)
+            .unwrap()
+            .collect::<Vec<_>>();
+        actual.sort();
+        assert_eq!(actual, expected);
+
+        let mut actual_geoms = si
+            .spatial_join_with_geos(big.clone(), interaction)
+            .unwrap()
+            .collect::<Vec<_>>();
+        actual_geoms.sort();
+        assert_eq!(actual_geoms, expected_geoms);
+
+        #[cfg(feature = "parallel")]
+        {
+            let si = config
+                .clone()
+                .parallel(small)
+                .expect("construction succeeded");
+            let mut actual = si
+                .spatial_join(big.clone(), interaction)
+                .unwrap()
+                .collect::<Vec<_>>();
+            actual.sort();
+            assert_eq!(actual, expected);
+
+            let mut actual_geoms = si
+                .spatial_join_with_geos(big.clone(), interaction)
+                .unwrap()
+                .collect::<Vec<_>>();
+            actual_geoms.sort();
+            assert_eq!(actual_geoms, _expected_geoms2);
+        }
+    }
+
+    #[test]
+    fn simple_index_self() {
+        test_prox_map(
+            Config::new().max_distance(4.),
+            vec![Point::new(1., 1.)],
+            vec![Point::new(1., 1.)],
+            vec![ProxMapRow {
+                big_index: 0,
+                small_index: 0,
+                distance: 0.,
+            }],
+        );
+    }
+
+    #[test]
+    fn simple_index_some_other() {
+        test_prox_map(
+            Config::new().max_distance(4.),
+            vec![Point::new(1., 1.)],
+            vec![Point::new(2., 1.)],
+            vec![ProxMapRow {
+                big_index: 0,
+                small_index: 0,
+                distance: 1.0,
+            }],
+        )
+    }
+
+    #[test]
+    fn simple_index_none() {
+        test_prox_map(
+            Config::new().max_distance(0.5),
+            vec![Point::new(1., 1.)],
+            vec![Point::new(2., 1.)],
+            vec![],
+        )
+    }
+    // for all pairs of types, verift that prox map finds and doesn't find depending on max_distance
+}
