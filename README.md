@@ -92,7 +92,7 @@ the addition of a `distance` field.
 ## Examples
 
 Here's the simplest thing: let's verify that a point intersects itself.
-```
+```rust
 use spatial_join::*;
 use geo::{Geometry, Point};
 // Create a new spatial index loaded with just one point
@@ -119,7 +119,7 @@ assert_eq!(
 For a slightly more complicated, we'll take a box and a smaller
 box and verify that the big box contains the smaller box, and
 we'll do it all in parallel.
-```
+```rust
 use spatial_join::*;
 use geo::{Coordinate, Geometry, Point, Rect};
    use rayon::prelude::*;
