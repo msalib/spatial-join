@@ -1,0 +1,20 @@
+on: [push]
+name: build
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: install libgeos dependencies
+        run: sudo apt install -y libgeos-dev
+      - name: test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+      - name: lint
+        uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
