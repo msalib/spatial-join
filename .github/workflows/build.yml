@@ -33,7 +33,9 @@ jobs:
           path: cobertura.xml
 
       - name: run benchmark
-        run: cargo bench | tee bench.txt
+        run: cargo bench 1k | tee bench.txt
+        # Run only the 1k benches because parallel/serial comparison
+        # is meaningless on tiny github servers.
 
       - name: store benchmark result
         uses: rhysd/github-action-benchmark@v1
