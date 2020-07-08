@@ -46,7 +46,7 @@ jobs:
         # is meaningless on tiny github servers.
 
       - name: store benchmark result
-        uses: rhysd/github-action-benchmark@v1
+        uses: pksunkara/github-action-benchmark@v1
         with:
           tool: 'cargo'
           output-file-path: bench.txt
