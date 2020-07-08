@@ -27,13 +27,16 @@ parallel = ["rayon", "num_cpus"]
 [dev-dependencies]
 proptest = "0.10.0"
 pretty_assertions = "0.6.1"
-criterion = "0.3"
+criterion = "0.3.2"
 approx = "0.3.2"
 wkt = "0.8.0"
 geos = "5.0.0"
 rand = "0.7.3"
 
+# I don't know what this does, but it is necessary to get cargo build -- --output-mode=X working
+[lib]
+bench = false
 
 [[bench]]
-name = "spatial_join"
 harness = false
+name = "spatial_join"

@@ -13,6 +13,14 @@ jobs:
       - name: install libgeos
         run: sudo apt install -y libgeos-dev
 
+      - name: cache rust build artifacts
+        uses: actions/cache@v2
+        with:
+          path: target
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.OS }}-build-
+
       - name: clippy
         uses: actions-rs/clippy-check@v1
         with:
@@ -33,7 +41,7 @@ jobs:
           path: cobertura.xml
 
       - name: run benchmark
-        run: cargo bench --no-default-features 1k | tee bench.txt
+        run: cargo bench --no-default-features 1k -- --output-format=bencher | tee bench.txt
         # Run only the 1k benches because parallel/serial comparison
         # is meaningless on tiny github servers.
 
