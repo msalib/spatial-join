@@ -13,13 +13,16 @@ jobs:
       - name: install libgeos
         run: sudo apt install -y libgeos-dev
 
+      - name: workaround a cache bug
+        run: mkdir target
+
       - name: cache rust build artifacts
         uses: actions/cache@v2
         with:
           path: target
-          key: ${{ runner.OS }}-build-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.OS }}-build2-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-build2-
 
       - name: clippy
         uses: actions-rs/clippy-check@v1
@@ -52,3 +55,5 @@ jobs:
           output-file-path: bench.txt
           github-token: ${{ secrets.GITHUB_TOKEN }}
           comment-always: true
+          auto-push: false
+          save-data-file: false
