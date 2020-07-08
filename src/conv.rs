@@ -5,7 +5,10 @@ use geo::{Geometry, Line, LineString, Point, Polygon, Rect, Triangle};
 use rayon::prelude::*;
 
 use super::validation::IsSafe;
-use crate::{structs::Par, Error, Indexes, SplitGeo, SplitGeoIndexes, SplitGeoSeq};
+use crate::{Error, Indexes, SplitGeo, SplitGeoIndexes, SplitGeoSeq};
+
+#[cfg(feature = "parallel")]
+use crate::structs::Par;
 
 impl TryFrom<&[Geometry<f64>]> for SplitGeoSeq {
     type Error = Error;

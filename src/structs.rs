@@ -28,7 +28,7 @@ pub enum Interaction {
     Contains,
 }
 
-#[derive(Default, Debug, PartialEq, Clone)]
+#[derive(Clone, Copy, Default, Debug, PartialEq)]
 pub struct Config {
     pub max_distance: f64,
 }
@@ -193,6 +193,7 @@ impl Indexes {
         }
     }
 
+    #[cfg(feature = "parallel")]
     pub fn add_offset(&self, offset: usize) -> Self {
         match self {
             Indexes::Range(r) => Indexes::Range(std::ops::Range {
