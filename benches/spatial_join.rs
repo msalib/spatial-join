@@ -58,16 +58,20 @@ fn generate_polys(
     result
 }
 
+// Sigh. Our workflow for posting benchmarks assumes that bench names
+// have no spaces:
+// https://github.com/pksunkara/github-action-benchmark/blob/master/src/extract.ts#L192
+
 fn serial_benchmark(c: &mut Criterion) {
     let polys1k = generate_polys(1_000, 40., 5., 5_000., 2_000.);
 
-    c.bench_function("1k load", |b| {
+    c.bench_function("1k_load", |b| {
         b.iter(|| {
             spatial_join::Config::new().serial(&polys1k).unwrap();
         })
     });
 
-    c.bench_function("1k self spatial join", |b| {
+    c.bench_function("1k_self_spatial_join", |b| {
         b.iter(|| {
             let si = spatial_join::Config::new().serial(&polys1k).unwrap();
             let v: Vec<_> = si
