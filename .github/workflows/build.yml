@@ -10,25 +10,15 @@ jobs:
         with:
           toolchain: stable
 
-      - name: install libgeos dependencies
+      - name: install libgeos
         run: sudo apt install -y libgeos-dev
-
-      - name: test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
 
       - name: clippy
         uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: security audit
-        uses: actions-rs/audit-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: measure coverage
+      - name: run tests and measure coverage
         uses: actions-rs/tarpaulin@v0.1
 
       - name: upload coverage to codecov.io
@@ -41,3 +31,19 @@ jobs:
         with:
           name: code-coverage-report
           path: cobertura.xml
+
+      - name: security audit
+        uses: actions-rs/audit-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: run benchmark
+        run: cargo bench | tee bench-output.txt
+
+      - name: store benchmark result
+        uses: rhysd/github-action-benchmark@v1
+        with:
+          tool: 'cargo'
+          output-file-path: bench-output.txt
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          comment-always: true
