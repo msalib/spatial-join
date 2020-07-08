@@ -32,18 +32,13 @@ jobs:
           name: code-coverage-report
           path: cobertura.xml
 
-      - name: security audit
-        uses: actions-rs/audit-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: run benchmark
-        run: cargo bench | tee bench-output.txt
+        run: cargo bench | tee bench.txt
 
       - name: store benchmark result
         uses: rhysd/github-action-benchmark@v1
         with:
           tool: 'cargo'
-          output-file-path: bench-output.txt
+          output-file-path: bench.txt
           github-token: ${{ secrets.GITHUB_TOKEN }}
           comment-always: true
