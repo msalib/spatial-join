@@ -24,9 +24,9 @@ jobs:
         uses: actions/cache@v2
         with:
           path: target
-          key: ${{ runner.OS }}-build2-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.OS }}-build4-${{ hashFiles('**/Cargo.toml') }}
           restore-keys: |
-            ${{ runner.OS }}-build2-
+            ${{ runner.OS }}-build4-
 
       - uses: actions-rs/audit-check@v1
         with:

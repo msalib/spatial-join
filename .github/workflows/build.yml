@@ -16,19 +16,13 @@ jobs:
       - name: workaround a cache bug
         run: mkdir target
 
-      - name: workaround a cache bug
-        run: touch Cargo.lock
-
       - name: cache rust build artifacts
         uses: actions/cache@v2
         with:
           path: target
-          key: ${{ runner.OS }}-build3-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.OS }}-build4-${{ hashFiles('**/Cargo.toml') }}
           restore-keys: |
-            ${{ runner.OS }}-build3-
-
-      - name: workaround a cache bug
-        run: rm Cargo.lock
+            ${{ runner.OS }}-build4-
 
       - name: clippy
         uses: actions-rs/clippy-check@v1
