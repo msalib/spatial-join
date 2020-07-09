@@ -18,15 +18,15 @@ jobs:
       - uses: actions/checkout@v1
 
       - name: workaround a cache bug
-        run: mkdir -p ~/.cargo
+        run: mkdir -p ~/.cargo/registry
 
       - name: cache rust build artifacts
         uses: actions/cache@v2
         with:
-          path: ~/.cargo
-          key: ${{ runner.OS }}-build5-${{ hashFiles('**/Cargo.toml') }}
+          path: ~/.cargo/registry
+          key: ${{ runner.OS }}-build7-${{ hashFiles('**/Cargo.toml') }}
           restore-keys: |
-            ${{ runner.OS }}-build5-
+            ${{ runner.OS }}-build7-
 
       - uses: actions-rs/audit-check@v1
         with:

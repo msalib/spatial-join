@@ -49,10 +49,11 @@ jobs:
         # is meaningless on tiny github servers.
 
       - name: store benchmark result
-        uses: pksunkara/github-action-benchmark@v1
+        uses: rhysd/github-action-benchmark@v1
         with:
+          name: benches
           tool: 'cargo'
           output-file-path: bench.txt
           github-token: ${{ secrets.GITHUB_TOKEN }}
           comment-always: true
- 
+          auto-push: true
