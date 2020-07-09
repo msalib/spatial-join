@@ -1,6 +1,7 @@
 [![spatial-join on Crates.io](https://meritbadge.herokuapp.com/spatial-join)](https://crates.io/crates/spatial-join)
 [![Docs.rs](https://docs.rs/spatial-join/badge.svg)](https://docs.rs/spatial-join)
 [![codecov](https://codecov.io/gh/msalib/spatial-join/branch/master/graph/badge.svg)](https://codecov.io/gh/msalib/spatial-join)
+![build](https://github.com/msalib/spatial-join/workflows/build/badge.svg)
 
 
 `spatial-join` provides tools to perform streaming geospatial-joins on geographic data.
