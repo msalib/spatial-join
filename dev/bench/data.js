@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1594266511761,
+  "lastUpdate": 1594314022037,
   "repoUrl": "https://github.com/msalib/spatial-join",
   "entries": {
     "benches": [
@@ -71,6 +71,42 @@ window.BENCHMARK_DATA = {
             "name": "1k_self_spatial_join",
             "value": 23749485,
             "range": "± 1148647",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "msalib@alum.mit.edu",
+            "name": "msalib",
+            "username": "msalib"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f60862f10803c454fd7928c78ca0bb15b9955b07",
+          "message": "ease semver requirements and add changelog (#2)",
+          "timestamp": "2020-07-09T12:56:19-04:00",
+          "tree_id": "4df66cf84ddcacfa470690dce64f304601dcb020",
+          "url": "https://github.com/msalib/spatial-join/commit/f60862f10803c454fd7928c78ca0bb15b9955b07"
+        },
+        "date": 1594314021462,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "1k_load",
+            "value": 740761,
+            "range": "± 2304",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "1k_self_spatial_join",
+            "value": 21403161,
+            "range": "± 71319",
             "unit": "ns/iter"
           }
         ]
