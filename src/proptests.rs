@@ -3,10 +3,14 @@ use std::convert::TryInto;
 use geo::{Coordinate, Geometry, Line, LineString, Point, Polygon, Rect, Triangle};
 use proptest::prelude::*;
 
-use crate::relates::Relates;
-use crate::{Config, Interaction, SplitGeoSeq};
-
 use super::naive::{slow_prox_map, slow_spatial_join};
+use crate::{
+    relates::Relates, tests::test_prox_map, tests::test_spatial_join, Config, Interaction,
+    SplitGeoSeq,
+};
+
+#[cfg(feature = "parallel")]
+use crate::{tests::test_par_prox_map, tests::test_par_spatial_join};
 
 #[rustfmt::skip]
 prop_compose! {
@@ -97,11 +101,11 @@ proptest! {
 	  small in arb_splitgeoseq(20),
 	  big in arb_splitgeoseq(20),
 	  max_distance in 0.0..4.0) {
-	use crate::tests::test_prox_map;
 	let expected = slow_prox_map(&small, &big, max_distance);
-	// This tests both .proximity_map and .proximity_map_with_geos
-	// and their parallel variants when available.
-	test_prox_map(Config::new().max_distance(max_distance), small, big, expected);
+	let config = Config::new().max_distance(max_distance);
+	#[cfg(feature = "parallel")]
+	test_par_prox_map(config, small.clone(), big.clone(), expected.clone());
+	test_prox_map(config, small, big, expected);
     }
 }
 
@@ -120,10 +124,9 @@ proptest! {
 	  small in arb_splitgeoseq(100),
 	  big in arb_splitgeoseq(100),
 	  interaction in interaction_strat()) {
-	use crate::tests::test_spatial_join;
 	let expected = slow_spatial_join(&small, &big, interaction);
-	// This tests both .spatial_join and .spatial_join_with_geos
-	// and their parallel variants when available.
+	#[cfg(feature = "parallel")]
+	test_par_spatial_join(Config::new(), small.clone(), big.clone(), interaction, expected.clone());
 	test_spatial_join(Config::new(), small, big, interaction, expected);
     }
 }

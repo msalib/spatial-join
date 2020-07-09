@@ -2,8 +2,10 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use geo::{Coordinate, Line};
 use rand;
 use rand::Rng;
-use rayon::iter::ParallelIterator;
 use wkt::ToWkt;
+
+#[cfg(feature = "parallel")]
+use rayon::iter::ParallelIterator;
 
 extern crate spatial_join;
 
@@ -56,17 +58,20 @@ fn generate_polys(
     result
 }
 
-fn criterion_benchmark(c: &mut Criterion) {
-    let polys1k = generate_polys(1_000, 40., 5., 5_000., 2_000.);
-    let polys5k = generate_polys(5_000, 40., 5., 5_000., 2_000.);
+// Sigh. Our workflow for posting benchmarks assumes that bench names
+// have no spaces:
+// https://github.com/pksunkara/github-action-benchmark/blob/master/src/extract.ts#L192
 
-    c.bench_function("1k load", |b| {
+fn serial_benchmark(c: &mut Criterion) {
+    let polys1k = generate_polys(1_000, 40., 5., 5_000., 2_000.);
+
+    c.bench_function("1k_load", |b| {
         b.iter(|| {
             spatial_join::Config::new().serial(&polys1k).unwrap();
         })
     });
 
-    c.bench_function("1k self spatial join", |b| {
+    c.bench_function("1k_self_spatial_join", |b| {
         b.iter(|| {
             let si = spatial_join::Config::new().serial(&polys1k).unwrap();
             let v: Vec<_> = si
@@ -76,6 +81,11 @@ fn criterion_benchmark(c: &mut Criterion) {
             v
         })
     });
+}
+
+#[cfg(feature = "parallel")]
+fn parallel_benchmark(c: &mut Criterion) {
+    let polys5k = generate_polys(5_000, 40., 5., 5_000., 2_000.);
 
     c.bench_function("5k self spatial join", |b| {
         b.iter(|| {
@@ -100,5 +110,8 @@ fn criterion_benchmark(c: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, criterion_benchmark);
+#[cfg(not(feature = "parallel"))]
+criterion_group!(benches, serial_benchmark);
+#[cfg(feature = "parallel")]
+criterion_group!(benches, serial_benchmark, parallel_benchmark);
 criterion_main!(benches);

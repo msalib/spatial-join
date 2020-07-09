@@ -2,16 +2,18 @@ use std::convert::TryInto;
 
 use smallvec::SmallVec;
 
-use crate::rtrees::Envelope;
-use crate::{
-    Config, Error, Interaction, Par, ParSpatialIndex, ProxMapGeoRow, ProxMapRow, SJoinGeoRow,
-    SJoinRow, SpatialIndex, SplitGeoSeq,
-};
-
-use crate::relates::Relates;
-
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
+
+use crate::rtrees::Envelope;
+use crate::{
+    Config, Error, Interaction, ProxMapGeoRow, ProxMapRow, SJoinGeoRow, SJoinRow, SpatialIndex,
+    SplitGeoSeq,
+};
+#[cfg(feature = "parallel")]
+use crate::{Par, ParSpatialIndex};
+
+use crate::relates::Relates;
 
 macro_rules! chain {
     ($thing:expr) => ($thing);

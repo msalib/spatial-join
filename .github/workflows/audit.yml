@@ -1,0 +1,24 @@
+# This is really slow since building it seems to take forever, so
+# getting it off the fast path helps.
+
+name: Security audit
+on:
+  schedule:
+    - cron: "37 8 * * 6"
+  push:
+    paths:
+      - "**/Cargo.toml"
+  pull_request:
+    branches:
+      - master
+jobs:
+  security_audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+
+      # We don't want to cache here since we want to get fresh updates
+      # each time.
+      - uses: actions-rs/audit-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}

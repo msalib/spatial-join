@@ -1,0 +1,43 @@
+name: bench
+on:
+  push:
+    branches:
+      - master
+jobs:
+  bench:
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: install libgeos
+        run: sudo apt install -y libgeos-dev
+
+      - name: workaround a cache bug
+        run: mkdir -p ~/.cargo/registry
+
+      - name: cache rust build artifacts
+        uses: actions/cache@v2
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.OS }}-build6-${{ hashFiles('**/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.OS }}-build6-
+
+      - name: run benchmark
+        run: cargo bench --no-default-features 1k -- --output-format=bencher | tee bench.txt
+        # Run only the 1k benches because parallel/serial comparison
+        # is meaningless on tiny github servers.
+
+      - name: store benchmark result
+        uses: rhysd/github-action-benchmark@v1
+        with:
+          name: benches
+          tool: 'cargo'
+          output-file-path: bench.txt
+          github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          comment-always: true
+          auto-push: true
+

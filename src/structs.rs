@@ -28,7 +28,7 @@ pub enum Interaction {
     Contains,
 }
 
-#[derive(Default, Debug, PartialEq, Clone)]
+#[derive(Clone, Copy, Default, Debug, PartialEq)]
 pub struct Config {
     pub max_distance: f64,
 }
@@ -38,6 +38,7 @@ impl Config {
         Default::default()
     }
 
+    #[allow(clippy::needless_update)]
     pub fn max_distance(self, value: f64) -> Config {
         Config {
             max_distance: value,
@@ -192,6 +193,7 @@ impl Indexes {
         }
     }
 
+    #[cfg(feature = "parallel")]
     pub fn add_offset(&self, offset: usize) -> Self {
         match self {
             Indexes::Range(r) => Indexes::Range(std::ops::Range {
@@ -207,7 +209,7 @@ impl Indexes {
     pub fn merge(self, other: Indexes) -> Indexes {
         // This is more complicated than it should be because rayon's
         // reduce makes no guarantees about order.
-        fn maybe_range(seq: &Vec<usize>) -> Option<std::ops::Range<usize>> {
+        fn maybe_range(seq: &[usize]) -> Option<std::ops::Range<usize>> {
             if !seq.is_empty() {
                 // hmmm...by construction, min,max should always be seq[0],seq[len-1]
                 let min = seq.iter().min().unwrap();

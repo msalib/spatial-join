@@ -5,16 +5,40 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - name: install libgeos dependencies
+
+      - name: install libgeos
         run: sudo apt install -y libgeos-dev
-      - name: test
-        uses: actions-rs/cargo@v1
+
+      - name: workaround a cache bug
+        run: mkdir -p ~/.cargo/registry
+
+      - name: cache rust build artifacts
+        uses: actions/cache@v2
         with:
-          command: test
-      - name: lint
+          path: ~/.cargo/registry
+          key: ${{ runner.OS }}-build6-${{ hashFiles('**/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.OS }}-build6-
+
+      - name: clippy
         uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: run tests and measure coverage
+        uses: actions-rs/tarpaulin@v0.1
+
+      - name: upload coverage to codecov.io
+        uses: codecov/codecov-action@v1.0.2
+        with:
+          token: ${{secrets.CODECOV_TOKEN}}
+
+      - name: archive code coverage results
+        uses: actions/upload-artifact@v1
+        with:
+          name: code-coverage-report
+          path: cobertura.xml
