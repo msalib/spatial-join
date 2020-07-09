@@ -14,15 +14,15 @@ jobs:
         run: sudo apt install -y libgeos-dev
 
       - name: workaround a cache bug
-        run: mkdir target
+        run: mkdir -p ~/.cargo
 
       - name: cache rust build artifacts
         uses: actions/cache@v2
         with:
-          path: target
-          key: ${{ runner.OS }}-build4-${{ hashFiles('**/Cargo.toml') }}
+          path: ~/.cargo
+          key: ${{ runner.OS }}-build5-${{ hashFiles('**/Cargo.toml') }}
           restore-keys: |
-            ${{ runner.OS }}-build4-
+            ${{ runner.OS }}-build5-
 
       - name: clippy
         uses: actions-rs/clippy-check@v1
