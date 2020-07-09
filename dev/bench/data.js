@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1594315962735,
+  "lastUpdate": 1594316818102,
   "repoUrl": "https://github.com/msalib/spatial-join",
   "entries": {
     "benches": [
@@ -143,6 +143,42 @@ window.BENCHMARK_DATA = {
             "name": "1k_self_spatial_join",
             "value": 16330690,
             "range": "± 1013154",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "msalib@alum.mit.edu",
+            "name": "Michael Salib",
+            "username": "msalib"
+          },
+          "committer": {
+            "email": "msalib@alum.mit.edu",
+            "name": "Michael Salib",
+            "username": "msalib"
+          },
+          "distinct": true,
+          "id": "027c346330f6874b6f889eb6fd74d1f7ed32b667",
+          "message": "(cargo-release) start next development iteration 0.1.5-alpha.0",
+          "timestamp": "2020-07-09T13:42:05-04:00",
+          "tree_id": "a964ef225c513e2f6064efedec9e25fc62e9803b",
+          "url": "https://github.com/msalib/spatial-join/commit/027c346330f6874b6f889eb6fd74d1f7ed32b667"
+        },
+        "date": 1594316817469,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "1k_load",
+            "value": 963774,
+            "range": "± 45299",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "1k_self_spatial_join",
+            "value": 17706909,
+            "range": "± 935001",
             "unit": "ns/iter"
           }
         ]
