@@ -42,18 +42,3 @@ jobs:
         with:
           name: code-coverage-report
           path: cobertura.xml
-
-      - name: run benchmark
-        run: cargo bench --no-default-features 1k -- --output-format=bencher | tee bench.txt
-        # Run only the 1k benches because parallel/serial comparison
-        # is meaningless on tiny github servers.
-
-      - name: store benchmark result
-        uses: rhysd/github-action-benchmark@v1
-        with:
-          name: benches
-          tool: 'cargo'
-          output-file-path: bench.txt
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          comment-always: true
-          auto-push: true
