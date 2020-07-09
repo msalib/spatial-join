@@ -8,9 +8,6 @@ on:
   push:
     paths:
       - "**/Cargo.toml"
-  pull_request:
-    branches:
-      - master
 jobs:
   security_audit:
     runs-on: ubuntu-latest

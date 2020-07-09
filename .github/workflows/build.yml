@@ -42,3 +42,6 @@ jobs:
         with:
           name: code-coverage-report
           path: cobertura.xml
+
+      - name: ensure things still work without parallel
+        run: cargo test --no-default-features --doc

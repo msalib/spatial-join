@@ -8,8 +8,7 @@
 
 ## Documentation
 
-Check out [docs at docs.rs](https://docs.rs/spatial-join)
-
+Check out [docs at docs.rs](https://docs.rs/spatial-join).
 
 ## Spatial Joins
 
@@ -230,3 +229,10 @@ Unless you explicitly state otherwise, any contribution intentionally
 submitted for inclusion in the work by you, as defined in the
 Apache-2.0 license, shall be dual licensed as above, without any
 additional terms or conditions.
+
+### Development
+
+Benchmark results over time are plotted
+[here](https://msalib.github.io/spatial-join/dev/bench/). Contributions
+are welcome! Just file a bug please!
+
