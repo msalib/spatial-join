@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1594316818102,
+  "lastUpdate": 1594490224742,
   "repoUrl": "https://github.com/msalib/spatial-join",
   "entries": {
     "benches": [
@@ -179,6 +179,42 @@ window.BENCHMARK_DATA = {
             "name": "1k_self_spatial_join",
             "value": 17706909,
             "range": "± 935001",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "msalib@alum.mit.edu",
+            "name": "msalib",
+            "username": "msalib"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "998cbcb6258d799d46b09ecbaf7f4afb9d9b2c9e",
+          "message": "Fix two major bugs that completely broke conversion of &[Geometry] for Parallel: (#3)\n\n* an off by one bug in Indexes::merge\r\n* failure to use the results of add_offset\r\n\r\nAlong the way, extend proprty tests to cover that code and simplify `Indexes::merge` after adding a `canonicalize` method.",
+          "timestamp": "2020-07-11T13:52:29-04:00",
+          "tree_id": "355adc76da7128fe334ab5bec81ae9dd32184fa3",
+          "url": "https://github.com/msalib/spatial-join/commit/998cbcb6258d799d46b09ecbaf7f4afb9d9b2c9e"
+        },
+        "date": 1594490224180,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "1k_load",
+            "value": 923687,
+            "range": "± 55872",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "1k_self_spatial_join",
+            "value": 18170835,
+            "range": "± 1039419",
             "unit": "ns/iter"
           }
         ]
