@@ -5,12 +5,12 @@ use proptest::prelude::*;
 
 use super::naive::{slow_prox_map, slow_spatial_join};
 use crate::{
-    relates::Relates, tests::test_prox_map, tests::test_spatial_join, Config, Interaction,
+    relates::Relates, tests::test_prox_map, tests::test_spatial_join, Config, Error, Interaction,
     SplitGeoSeq,
 };
 
 #[cfg(feature = "parallel")]
-use crate::{tests::test_par_prox_map, tests::test_par_spatial_join};
+use crate::{tests::test_par_prox_map, tests::test_par_spatial_join, Par};
 
 #[rustfmt::skip]
 prop_compose! {
@@ -86,6 +86,18 @@ fn geo_strat() -> impl Strategy<Value = Geometry<f64>> {
     ]
 }
 
+#[cfg(feature = "parallel")]
+#[rustfmt::skip]
+proptest! {
+    #[test]
+    fn serial_par_conv_agree(geos in prop::collection::vec(geo_strat(), 0..10)) {
+	// The Parallel converter is a bit dodgy...
+	let serial: Result<SplitGeoSeq, Error> = (&geos).try_into();
+	let parallel: Result<Par<SplitGeoSeq>, Error> = (&geos).try_into();
+	assert_eq!(serial, parallel.map(|p| p.0));
+    }
+}
+
 #[rustfmt::skip]
 prop_compose! {
     fn arb_splitgeoseq(n: usize)(
@@ -104,8 +116,8 @@ proptest! {
 	let expected = slow_prox_map(&small, &big, max_distance);
 	let config = Config::new().max_distance(max_distance);
 	#[cfg(feature = "parallel")]
-	test_par_prox_map(config, small.clone(), big.clone(), expected.clone());
-	test_prox_map(config, small, big, expected);
+	test_par_prox_map(config, small.clone(), big.clone(), &expected);
+	test_prox_map(config, small, big, &expected);
     }
 }
 
@@ -126,8 +138,8 @@ proptest! {
 	  interaction in interaction_strat()) {
 	let expected = slow_spatial_join(&small, &big, interaction);
 	#[cfg(feature = "parallel")]
-	test_par_spatial_join(Config::new(), small.clone(), big.clone(), interaction, expected.clone());
-	test_spatial_join(Config::new(), small, big, interaction, expected);
+	test_par_spatial_join(Config::new(), small.clone(), big.clone(), interaction, &expected);
+	test_spatial_join(Config::new(), small, big, interaction, &expected);
     }
 }
 

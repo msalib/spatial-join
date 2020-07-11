@@ -277,18 +277,19 @@ mod tests {
         config: Config,
         small: Small,
         big: Big,
-        mut expected: Vec<ProxMapRow>,
+        expected: &Vec<ProxMapRow>,
     ) where
         Small: TryInto<SplitGeoSeq, Error = E1> + Clone,
         Big: TryInto<SplitGeoSeq, Error = E2> + Clone,
         E1: std::any::Any + std::fmt::Debug,
         E2: std::any::Any + std::fmt::Debug,
     {
+        //assert!(expected.is_sorted());
         let small_geoms = sgs_try_into(small.clone())
             .expect("small conversion")
             .to_vec();
         let big_geoms = sgs_try_into(big.clone()).expect("big conversion").to_vec();
-        let mut expected_geoms: Vec<_> = expected
+        let expected_geoms: Vec<_> = expected
             .iter()
             .map(|pmr| ProxMapGeoRow {
                 big_index: pmr.big_index,
@@ -298,8 +299,6 @@ mod tests {
                 small: small_geoms[pmr.small_index].clone(),
             })
             .collect();
-        expected.sort();
-        expected_geoms.sort();
         let _expected_geoms2 = expected_geoms.clone();
 
         let si = config
@@ -308,7 +307,7 @@ mod tests {
             .expect("construction succeeded");
         let mut actual = si.proximity_map(big.clone()).unwrap().collect::<Vec<_>>();
         actual.sort();
-        assert_eq!(actual, expected);
+        assert_eq!(actual, *expected);
 
         let mut actual_geoms = si
             .proximity_map_with_geos(big.clone())
@@ -323,7 +322,7 @@ mod tests {
         config: Config,
         small: Small,
         big: Big,
-        mut expected: Vec<ProxMapRow>,
+        expected: &Vec<ProxMapRow>,
     ) where
         Small: TryInto<Par<SplitGeoSeq>, Error = E1> + Clone,
         Big: TryInto<Par<SplitGeoSeq>, Error = E2> + Clone,
@@ -336,7 +335,7 @@ mod tests {
         let big_geoms = par_sgs_try_into(big.clone())
             .expect("big conversion")
             .to_vec();
-        let mut expected_geoms: Vec<_> = expected
+        let expected_geoms: Vec<_> = expected
             .iter()
             .map(|pmr| ProxMapGeoRow {
                 big_index: pmr.big_index,
@@ -346,8 +345,6 @@ mod tests {
                 small: small_geoms[pmr.small_index].clone(),
             })
             .collect();
-        expected.sort();
-        expected_geoms.sort();
         let _expected_geoms2 = expected_geoms.clone();
 
         let si = config
@@ -356,7 +353,7 @@ mod tests {
             .expect("construction succeeded");
         let mut actual = si.proximity_map(big.clone()).unwrap().collect::<Vec<_>>();
         actual.sort();
-        assert_eq!(actual, expected);
+        assert_eq!(actual, *expected);
 
         let mut actual_geoms = si
             .proximity_map_with_geos(big.clone())
@@ -371,7 +368,7 @@ mod tests {
         small: Small,
         big: Big,
         interaction: Interaction,
-        mut expected: Vec<SJoinRow>,
+        expected: &Vec<SJoinRow>,
     ) where
         Small: TryInto<SplitGeoSeq, Error = E1> + Clone,
         Big: TryInto<SplitGeoSeq, Error = E2> + Clone,
@@ -382,7 +379,7 @@ mod tests {
             .expect("small conversion")
             .to_vec();
         let big_geoms = sgs_try_into(big.clone()).expect("big conversion").to_vec();
-        let mut expected_geoms: Vec<_> = expected
+        let expected_geoms: Vec<_> = expected
             .iter()
             .map(|sjr| SJoinGeoRow {
                 big_index: sjr.big_index,
@@ -391,8 +388,6 @@ mod tests {
                 small: small_geoms[sjr.small_index].clone(),
             })
             .collect();
-        expected.sort();
-        expected_geoms.sort();
         let _expected_geoms2 = expected_geoms.clone();
 
         let si = config
@@ -404,7 +399,7 @@ mod tests {
             .unwrap()
             .collect::<Vec<_>>();
         actual.sort();
-        assert_eq!(actual, expected);
+        assert_eq!(actual, *expected);
 
         let mut actual_geoms = si
             .spatial_join_with_geos(big.clone(), interaction)
@@ -420,7 +415,7 @@ mod tests {
         small: Small,
         big: Big,
         interaction: Interaction,
-        mut expected: Vec<SJoinRow>,
+        expected: &Vec<SJoinRow>,
     ) where
         Small: TryInto<Par<SplitGeoSeq>, Error = E1> + Clone,
         Big: TryInto<Par<SplitGeoSeq>, Error = E2> + Clone,
@@ -433,7 +428,7 @@ mod tests {
         let big_geoms = par_sgs_try_into(big.clone())
             .expect("big conversion")
             .to_vec();
-        let mut expected_geoms: Vec<_> = expected
+        let expected_geoms: Vec<_> = expected
             .iter()
             .map(|sjr| SJoinGeoRow {
                 big_index: sjr.big_index,
@@ -442,8 +437,6 @@ mod tests {
                 small: small_geoms[sjr.small_index].clone(),
             })
             .collect();
-        expected.sort();
-        expected_geoms.sort();
         let _expected_geoms2 = expected_geoms.clone();
 
         let si = config
@@ -455,7 +448,7 @@ mod tests {
             .unwrap()
             .collect::<Vec<_>>();
         actual.sort();
-        assert_eq!(actual, expected);
+        assert_eq!(actual, *expected);
 
         let mut actual_geoms = si
             .spatial_join_with_geos(big.clone(), interaction)
@@ -475,9 +468,31 @@ mod tests {
             small_index: 0,
             distance: 0.,
         }];
-        test_prox_map(config, small.clone(), big.clone(), expected.clone());
+        test_prox_map(config, small.clone(), big.clone(), &expected);
         #[cfg(feature = "parallel")]
-        test_par_prox_map(config, small, big, expected);
+        test_par_prox_map(config, small, big, &expected);
+    }
+
+    #[test]
+    fn self_spatial_join_pair() {
+        let config = Config::new();
+        let pts = vec![
+            geo::Geometry::Point(Point::new(1., 1.)),
+            geo::Geometry::Point(Point::new(22., 22.)),
+        ];
+        let expected = vec![
+            SJoinRow {
+                big_index: 0,
+                small_index: 0,
+            },
+            SJoinRow {
+                big_index: 1,
+                small_index: 1,
+            },
+        ];
+        test_spatial_join(config, &pts, &pts, Interaction::Intersects, &expected);
+        #[cfg(feature = "parallel")]
+        test_par_spatial_join(config, &pts, &pts, Interaction::Intersects, &expected);
     }
 
     #[test]
@@ -490,9 +505,9 @@ mod tests {
             small_index: 0,
             distance: 1.0,
         }];
-        test_prox_map(config, small.clone(), big.clone(), expected.clone());
+        test_prox_map(config, small.clone(), big.clone(), &expected);
         #[cfg(feature = "parallel")]
-        test_par_prox_map(config, small, big, expected);
+        test_par_prox_map(config, small, big, &expected);
     }
 
     #[test]
@@ -501,9 +516,9 @@ mod tests {
         let small = vec![Point::new(1., 1.)];
         let big = vec![Point::new(2., 1.)];
         let expected = vec![];
-        test_prox_map(config, small.clone(), big.clone(), expected.clone());
+        test_prox_map(config, small.clone(), big.clone(), &expected);
         #[cfg(feature = "parallel")]
-        test_par_prox_map(config, small, big, expected);
+        test_par_prox_map(config, small, big, &expected);
     }
     // for all pairs of types, verift that prox map finds and doesn't find depending on max_distance
 }

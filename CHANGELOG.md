@@ -2,6 +2,9 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Changed
+- fixed a major bug that made parallel conversions between sequences of `geo::Geometry<f64>` completely broken.
+
 ## [0.1.4] - 2020-07-09
 
 ### Added

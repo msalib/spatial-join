@@ -108,10 +108,6 @@ impl SplitGeoSeq {
 
         a
     }
-
-    pub fn fixup(&mut self) {
-        // because parallel reductions might not
-    }
 }
 
 lazy_static::lazy_static! {
@@ -194,32 +190,39 @@ impl Indexes {
     }
 
     #[cfg(feature = "parallel")]
-    pub fn add_offset(&self, offset: usize) -> Self {
-        match self {
-            Indexes::Range(r) => Indexes::Range(std::ops::Range {
-                start: r.start + offset,
-                end: r.end + offset,
+    pub fn add_offset(&mut self, offset: usize) {
+        let new = match self {
+            Indexes::Range(r) => Indexes::Range(if r.start == r.end {
+                r.clone()
+            } else {
+                std::ops::Range {
+                    start: r.start + offset,
+                    end: r.end + offset,
+                }
             }),
             Indexes::Explicit(v) => {
                 Indexes::Explicit(v.iter().map(|value| value + offset).collect())
             }
+        };
+        *self = new;
+    }
+
+    pub fn canonicalize(&mut self) {
+        if let Indexes::Explicit(v) = self {
+            if v.is_empty() {
+                *self = Indexes::Range(0..0);
+            } else {
+                let is_contiguous = v.windows(2).all(|slice| (slice[1] - slice[0]) == 1);
+                if is_contiguous {
+                    *self = Indexes::Range(v[0]..(v[v.len() - 1] + 1));
+                }
+            }
         }
     }
 
-    pub fn merge(self, other: Indexes) -> Indexes {
+    pub fn merge(mut self, mut other: Indexes) -> Indexes {
         // This is more complicated than it should be because rayon's
         // reduce makes no guarantees about order.
-        fn maybe_range(seq: &[usize]) -> Option<std::ops::Range<usize>> {
-            if !seq.is_empty() {
-                // hmmm...by construction, min,max should always be seq[0],seq[len-1]
-                let min = seq.iter().min().unwrap();
-                let max = seq.iter().max().unwrap();
-                if (max - min) + 1 == seq.len() {
-                    return Some(*min..(max + 1));
-                }
-            }
-            None
-        }
 
         fn is_empty(r: &std::ops::Range<usize>) -> bool {
             // not in stable yet, sigh
@@ -235,9 +238,9 @@ impl Indexes {
             };
 
             if a.end == b.start {
-                Indexes::Range(a.start..b.end + 1)
+                Indexes::Range(a.start..b.end)
             } else if b.end == a.start {
-                Indexes::Range(b.start..a.end + 1)
+                Indexes::Range(b.start..a.end)
             } else {
                 let (a, b) = if a.end < b.start { (a, b) } else { (b, a) };
                 Indexes::Explicit(a.chain(b).collect())
@@ -252,20 +255,13 @@ impl Indexes {
                 return Indexes::Explicit(a);
             }
 
-            // Hmmm...the duplication here suggests that we should be
-            // recursing down.
-            match (maybe_range(&a), maybe_range(&b)) {
-                (Some(a), Some(b)) => join_ranges(a, b),
-                (Some(a), None) => join_range_vec(a, b),
-                (None, Some(b)) => join_range_vec(b, a),
-                (None, None) => Indexes::Explicit(if a[0] <= b[0] {
-                    a.append(&mut b);
-                    a
-                } else {
-                    b.append(&mut a);
-                    b
-                }),
-            }
+            Indexes::Explicit(if a[0] <= b[0] {
+                a.append(&mut b);
+                a
+            } else {
+                b.append(&mut a);
+                b
+            })
         }
 
         fn join_range_vec(a: std::ops::Range<usize>, b: Vec<usize>) -> Indexes {
@@ -278,22 +274,23 @@ impl Indexes {
                 return Indexes::Explicit(b);
             }
 
-            match maybe_range(&b) {
-                Some(b) => join_ranges(a, b),
-                None => Indexes::Explicit(if a.end < b[0] {
-                    a.chain(b.into_iter()).collect()
-                } else {
-                    b.into_iter().chain(a).collect()
-                }),
-            }
+            Indexes::Explicit(if a.end <= b[0] {
+                a.chain(b.into_iter()).collect()
+            } else {
+                b.into_iter().chain(a).collect()
+            })
         }
 
-        match (self, other) {
+        self.canonicalize();
+        other.canonicalize();
+        let mut res = match (self, other) {
             (Indexes::Range(a), Indexes::Range(b)) => join_ranges(a, b),
             (Indexes::Range(a), Indexes::Explicit(b)) => join_range_vec(a, b),
             (Indexes::Explicit(a), Indexes::Range(b)) => join_range_vec(b, a),
             (Indexes::Explicit(a), Indexes::Explicit(b)) => join_vec(a, b),
-        }
+        };
+        res.canonicalize();
+        res
     }
 }
 
