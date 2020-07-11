@@ -87,25 +87,26 @@
 //! ```
 //! use spatial_join::*;
 //! use geo::{Geometry, Point};
-//! // Create a new spatial index loaded with just one point
-//! let idx = Config::new()
-//!     // Ask for a serial index that will process data on only one core
-//!     .serial(vec![Geometry::Point(Point::new(1.1, 2.2))])
-//!     .unwrap(); // Creating an index can fail!
-//! let results: Vec<_> = idx
-//!     .spatial_join(
-//!         vec![Geometry::Point(Point::new(1.1, 2.2))],
-//!         Interaction::Intersects,
-//!     )
-//!     .unwrap() // spatial_join can fail, but we'll assume it won't here
-//!     .collect(); // we actually get an iterator, but let's collect it into a Vector.
-//! assert_eq!(
-//!     results,
-//!     vec![SJoinRow {
-//!         big_index: 0,
-//!         small_index: 0
-//!     }]
-//! );
+//! fn foo() -> Result<(), Error> {
+//!     // Create a new spatial index loaded with just one point
+//!     let idx = Config::new()
+//!         // Ask for a serial index that will process data on only one core
+//!         .serial(vec![Geometry::Point(Point::new(1.1, 2.2))])?;
+//!     let results: Vec<_> = idx
+//!         .spatial_join(
+//!             vec![Geometry::Point(Point::new(1.1, 2.2))],
+//!             Interaction::Intersects,
+//!         )?
+//!         .collect(); // we actually get an iterator, but let's collect it into a Vector.
+//!     assert_eq!(
+//!         results,
+//!         vec![SJoinRow {
+//!             big_index: 0,
+//!             small_index: 0
+//!         }]);
+//!     Ok(())
+//! }
+//! foo();
 //! ```
 //!
 //! For a slightly more complicated, we'll take a box and a smaller
@@ -113,33 +114,34 @@
 //! we'll do it all in parallel.
 //! ```
 //! #[cfg(feature = "parallel")] {
-//! use spatial_join::*;
-//! use geo::{Coordinate, Geometry, Point, Rect};
-//! use rayon::prelude::*;
+//!     use spatial_join::*;
+//!     use geo::{Coordinate, Geometry, Point, Rect};
+//!     use rayon::prelude::*;
 //!
-//! let idx = Config::new()
-//!     .parallel(vec![Geometry::Rect(Rect::new(
-//!         Coordinate { x: -1., y: -1. },
-//!         Coordinate { x: 1., y: 1. },
-//!     ))])
-//!     .unwrap();
-//! let results: Vec<_> = idx
-//!     .spatial_join(
-//!         vec![Geometry::Rect(Rect::new(
-//!             Coordinate { x: -0.5, y: -0.5 },
-//!             Coordinate { x: 0.5, y: 0.5 },
-//!     ))],
-//!         Interaction::Contains,
-//!     )
-//!     .unwrap()
-//!     .collect();
-//! assert_eq!(
-//!     results,
-//!     vec![SJoinRow {
-//!         big_index: 0,
-//!         small_index: 0
-//!     }]
-//! );
+//!     fn bar() -> Result<(), Error> {
+//!         let idx = Config::new()
+//!              .parallel(vec![Geometry::Rect(Rect::new(
+//!                  Coordinate { x: -1., y: -1. },
+//!                  Coordinate { x: 1., y: 1. },
+//!              ))])?;
+//!          let results: Vec<_> = idx
+//!              .spatial_join(
+//!                  vec![Geometry::Rect(Rect::new(
+//!                      Coordinate { x: -0.5, y: -0.5 },
+//!                      Coordinate { x: 0.5, y: 0.5 },
+//!              ))],
+//!                  Interaction::Contains,
+//!              )?
+//!              .collect();
+//!          assert_eq!(
+//!              results,
+//!              vec![SJoinRow {
+//!                  big_index: 0,
+//!                  small_index: 0
+//!              }]
+//!          );
+//!          Ok(())
+//!     }
 //! }
 //! ```
 //!
