@@ -51,6 +51,14 @@ impl TryFrom<&[Geometry<f64>]> for SplitGeoSeq {
                 _ => unimplemented!("ugh"),
             }
         }
+
+        result.indexes.points.canonicalize();
+        result.indexes.lines.canonicalize();
+        result.indexes.polys.canonicalize();
+        result.indexes.line_strings.canonicalize();
+        result.indexes.rects.canonicalize();
+        result.indexes.tris.canonicalize();
+
         Ok(result)
     }
     // FIXME: add an optimization that looks for cases where all but
@@ -81,7 +89,7 @@ impl TryFrom<&[Geometry<f64>]> for Par<SplitGeoSeq> {
             })
             .map(|range| {
                 let offset = range.start;
-                SplitGeoSeq::try_from(&seq[range]).map(|sgs| {
+                SplitGeoSeq::try_from(&seq[range]).map(|mut sgs| {
                     sgs.indexes.points.add_offset(offset);
                     sgs.indexes.lines.add_offset(offset);
                     sgs.indexes.polys.add_offset(offset);
@@ -307,7 +315,7 @@ mod tests {
             indexes: SplitGeoIndexes {
                 points: Indexes::Range(0..1),
                 lines: Indexes::Explicit(vec![1, 3]),
-                polys: Indexes::Explicit(vec![2]),
+                polys: Indexes::Range(2..3),
                 line_strings: Indexes::default(),
                 rects: Indexes::default(),
                 tris: Indexes::default(),
