@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1594490224742,
+  "lastUpdate": 1594530225963,
   "repoUrl": "https://github.com/msalib/spatial-join",
   "entries": {
     "benches": [
@@ -215,6 +215,42 @@ window.BENCHMARK_DATA = {
             "name": "1k_self_spatial_join",
             "value": 18170835,
             "range": "± 1039419",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "msalib@alum.mit.edu",
+            "name": "msalib",
+            "username": "msalib"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "78b11982086f422595f10b170ac93ce475a923ea",
+          "message": "Remove unwraps in doctests per API guidelines (#4)",
+          "timestamp": "2020-07-12T00:58:35-04:00",
+          "tree_id": "97007cee130a53870c9a83de358d49270ced7813",
+          "url": "https://github.com/msalib/spatial-join/commit/78b11982086f422595f10b170ac93ce475a923ea"
+        },
+        "date": 1594530225412,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "1k_load",
+            "value": 646994,
+            "range": "± 4021",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "1k_self_spatial_join",
+            "value": 17747685,
+            "range": "± 141246",
             "unit": "ns/iter"
           }
         ]
