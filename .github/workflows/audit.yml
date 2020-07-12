@@ -12,7 +12,6 @@ jobs:
   security_audit:
     runs-on: ubuntu-latest
     steps:
-      - timeout-minutes: 20
       - uses: actions/checkout@v1
 
       # We don't want to cache here since we want to get fresh updates
