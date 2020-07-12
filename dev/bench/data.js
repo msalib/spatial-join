@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1594530685020,
+  "lastUpdate": 1594590646692,
   "repoUrl": "https://github.com/msalib/spatial-join",
   "entries": {
     "benches": [
@@ -287,6 +287,42 @@ window.BENCHMARK_DATA = {
             "name": "1k_self_spatial_join",
             "value": 24301467,
             "range": "± 897449",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "msalib@alum.mit.edu",
+            "name": "msalib",
+            "username": "msalib"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0049a32ec8d541ed72f88a9ec88200b6f1fb61f2",
+          "message": "Revert \"Update github action step for codecov (#5)\" (#6)\n\nThis reverts commit 28f9a4f5bffd95ef2d665961ab41929eda840fb5.",
+          "timestamp": "2020-07-12T17:46:40-04:00",
+          "tree_id": "282b62d972bed61b45eda73cd3dc55ba388c6238",
+          "url": "https://github.com/msalib/spatial-join/commit/0049a32ec8d541ed72f88a9ec88200b6f1fb61f2"
+        },
+        "date": 1594590646140,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "1k_load",
+            "value": 741379,
+            "range": "± 1144",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "1k_self_spatial_join",
+            "value": 17154397,
+            "range": "± 32175",
             "unit": "ns/iter"
           }
         ]
