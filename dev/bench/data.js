@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1594590646692,
+  "lastUpdate": 1594591441482,
   "repoUrl": "https://github.com/msalib/spatial-join",
   "entries": {
     "benches": [
@@ -323,6 +323,42 @@ window.BENCHMARK_DATA = {
             "name": "1k_self_spatial_join",
             "value": 17154397,
             "range": "± 32175",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "msalib@alum.mit.edu",
+            "name": "msalib",
+            "username": "msalib"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ad94c061370d83b704a4dbe24033e5eef7b46808",
+          "message": "Update github action step for codecov (#7)\n\nSince the older version times out.\r\n\r\nAlso, add max time outs to all workflow jobs so we don't get the default of 6 hours.",
+          "timestamp": "2020-07-12T17:59:05-04:00",
+          "tree_id": "fc2daa16d1d2dcb7b57e91e3030650773a8da48a",
+          "url": "https://github.com/msalib/spatial-join/commit/ad94c061370d83b704a4dbe24033e5eef7b46808"
+        },
+        "date": 1594591440849,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "1k_load",
+            "value": 1009887,
+            "range": "± 50710",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "1k_self_spatial_join",
+            "value": 20942707,
+            "range": "± 1098234",
             "unit": "ns/iter"
           }
         ]
