@@ -7,6 +7,7 @@ jobs:
   bench:
     runs-on: ubuntu-latest
     steps:
+      - timeout-minutes: 20
       - uses: actions/checkout@v2
 
       - uses: actions-rs/toolchain@v1
