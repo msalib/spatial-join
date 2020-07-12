@@ -2,6 +2,8 @@
 
 ## [Unreleased] - ReleaseDate
 
+## [0.1.5] - 2020-07-12
+
 ### Changed
 - fixed a major bug that made parallel conversions between sequences of `geo::Geometry<f64>` completely broken.
 
@@ -18,5 +20,6 @@
 - eased semver requirements for dependencies
 
 <!-- next-url -->
-[Unreleased]: https://github.com/msalib/spatial-join/compare/v0.1.4...HEAD
+[Unreleased]: https://github.com/msalib/spatial-join/compare/v0.1.5...HEAD
+[0.1.5]: https://github.com/msalib/spatial-join/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/assert-rs/predicates-rs/compare/v0.1.3...v0.1.4

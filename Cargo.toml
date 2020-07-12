@@ -1,6 +1,6 @@
 [package]
 name = "spatial-join"
-version = "0.1.5-alpha.0"
+version = "0.1.5"
 authors = ["Michael Salib <msalib@alum.mit.edu>"]
 repository = "https://github.com/msalib/spatial-join"
 edition = "2018"
